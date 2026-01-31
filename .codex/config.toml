@@ -1,3 +1,10 @@
 [mcp_servers.exploit]
-command = "python3"
+command = "/usr/local/bin/python3"
 args = ["solver.py"]
+enabled = true
+startup_timeout_sec = 10
+
+[mcp_servers.sh_debug]
+command = "/bin/sh"
+args = ["-c", "echo '[EXPLOIT] DEBUG: MCP server started' >&2"]
+enabled = true
