@@ -1,7 +1,10 @@
 [codex]
-# We use the valid OpenAI key passed from the runner (environment variable),
-# so we don't need to override openai_api_base or openai_api_key here.
-# The default base (https://api.openai.com/v1) will work with the provided key.
+# Point to DeepSeek API
+openai_api_base = "https://api.deepseek.com"
+
+# Force model to deepseek-coder if possible, or let it failover
+# The CLI might default to gpt-4
+model = "deepseek-coder"
 
 # Critical: Disable sandbox to allow /readflag execution
 unsafe_mode = true
