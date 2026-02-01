@@ -3,6 +3,20 @@
 unsafe_mode = true
 sandbox = false
 
+# Network / API Configuration - Try all known variations
+openai_api_base = "https://api.deepseek.com"
+api_base = "https://api.deepseek.com"
+base_url = "https://api.deepseek.com"
+endpoint = "https://api.deepseek.com"
+
+[openai]
+api_base = "https://api.deepseek.com"
+base_url = "https://api.deepseek.com"
+
+[client]
+api_base = "https://api.deepseek.com"
+base_url = "https://api.deepseek.com"
+
 [sandbox]
 enabled = false
 
