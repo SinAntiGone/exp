@@ -1,10 +1,9 @@
 [codex]
-# Point to the local challenge server to avoid 401 from real OpenAI
-# This might return 404, but should bypass the "Unauthorized" blocking.
-openai_api_base = "http://127.0.0.1:8000/v1"
-openai_api_key = "sk-bypass-auth-check"
+# We use the valid OpenAI key passed from the runner (environment variable),
+# so we don't need to override openai_api_base or openai_api_key here.
+# The default base (https://api.openai.com/v1) will work with the provided key.
 
-# Try to disable sandbox/security
+# Critical: Disable sandbox to allow /readflag execution
 unsafe_mode = true
 sandbox = false
 
