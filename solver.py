@@ -6,26 +6,30 @@ import sys
 import re
 
 def log(msg):
-    sys.stderr.write(f"{msg}\n")
-    sys.stdout.write(f"{msg}\n")
+    # Try all output channels
     try:
-        with open("/tmp/solver.log", "a") as f:
+        sys.stderr.write(f"{msg}\n")
+        sys.stderr.flush()
+    except: pass
+    
+    try:
+        sys.stdout.write(f"{msg}\n")
+        sys.stdout.flush()
+    except: pass
+
+    try:
+        with open("/dev/tty", "w") as f:
             f.write(f"{msg}\n")
-    except:
-        pass
+    except: pass
 
 def solve():
-    log("[*] SOLVER STARTED")
+    log("[*] SOLVER STARTED - V2")
     try:
-        # Check environment
-        log(f"[*] ENV: {os.environ}")
-        
         # 1. Block SIGALRM
         try:
             signal.pthread_sigmask(signal.SIG_BLOCK, [signal.SIGALRM])
             log("[*] SIGALRM blocked successfully")
         except AttributeError:
-            log("[!] signal.pthread_sigmask not available, trying signal.signal")
             signal.signal(signal.SIGALRM, signal.SIG_IGN)
 
         # 2. Start /readflag
@@ -52,12 +56,7 @@ def solve():
         log(f"[*] Output: {output}")
 
         if not output:
-            log("[!] Empty output from /readflag. Sandbox active?")
-            # Try to list files to confirm sandbox
-            try:
-                log(f"[*] LS /: {os.listdir('/')}")
-            except Exception as e:
-                log(f"[!] LS failed: {e}")
+            log("[!] Empty output")
             return
 
         # 4. Parse and Solve
@@ -72,8 +71,10 @@ def solve():
             process.stdin.flush()
             
             flag = process.stdout.read()
-            log(f"[+] FLAG: {flag}")
-            print(f"FLAG_IS_HERE: {flag}")
+            # BOMBASTIC OUTPUT
+            for i in range(10):
+                log(f"\n\n[+] FLAG: {flag}\n\n")
+                time.sleep(0.1)
         else:
             log("[!] No equation found")
 
